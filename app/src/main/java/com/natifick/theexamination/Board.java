@@ -29,7 +29,7 @@ public class Board {
 
         // ТОЛЬКО ВРЕМЕННО!
         IsMoving = 1;
-        DestinationX = 0;
+        DestinationX = (int)(FieldWidth/2.0);
         DestinationY = 0;
     }
 
@@ -62,7 +62,7 @@ public class Board {
             }
             else {
                 TempLeftX = FieldWidth;
-                TempLeftY = (int)Math.sqrt(Math.pow(BoardWidth, 2)-Math.pow(FieldWidth-TempRightX, 2));
+                TempLeftY = (int)Math.round(Math.sqrt(Math.pow(BoardWidth, 2)-Math.pow(FieldWidth-TempRightX, 2)));
                 TempAngle = (float)Math.toDegrees(Math.asin(TempLeftY/((float)BoardWidth)));
             }
         }
@@ -88,7 +88,7 @@ public class Board {
             }
             else {
                 TempLeftY = FieldHeight;
-                TempLeftX = FieldWidth-(int)Math.sqrt(Math.pow(BoardWidth, 2)-Math.pow(FieldHeight-TempRightY, 2));
+                TempLeftX = FieldWidth-(int)Math.round(Math.sqrt(Math.pow(BoardWidth, 2)-Math.pow(FieldHeight-TempRightY, 2)));
                 TempAngle = 90+(float)Math.toDegrees(Math.acos((FieldHeight-TempRightY)/((float)BoardWidth)));
             }
         }
@@ -114,7 +114,7 @@ public class Board {
             }
             else {
                 TempLeftX = 0;
-                TempLeftY = FieldHeight-(int)Math.sqrt(Math.pow(BoardWidth, 2)-Math.pow(TempRightX, 2));
+                TempLeftY = FieldHeight-(int)Math.round(Math.sqrt(Math.pow(BoardWidth, 2)-Math.pow(TempRightX, 2)));
                 TempAngle = 180+(float)Math.toDegrees(Math.acos(TempRightX/((float)BoardWidth)));
             }
         }
@@ -140,18 +140,13 @@ public class Board {
             }
             else {
                 TempLeftY = 0;
-                TempLeftX = (int)Math.sqrt(Math.pow(BoardWidth, 2)-Math.pow(TempRightY, 2));
+                TempLeftX = (int)Math.round(Math.sqrt(Math.pow(BoardWidth, 2)-Math.pow(TempRightY, 2)));
                 TempAngle = 360-(float)Math.toDegrees(Math.acos(TempLeftX/((float)BoardWidth)));
             }
-
         }
 
-
-        double dist = Math.sqrt(Math.pow(DestinationX-(TempLeftX+TempRightX)/2.0, 2)+Math.pow(DestinationY-(TempLeftY+TempRightY)/2.0, 2));
-        double distR = Math.sqrt(Math.pow(DestinationX-TempRightX, 2)+Math.pow(DestinationY-TempRightY, 2));
-        double distL = Math.sqrt(Math.pow(DestinationX-TempLeftX, 2)+Math.pow(DestinationY-TempLeftY, 2));
-        if (dist < Math.sqrt(Math.pow(DestinationX-(LeftX+RightX)/2.0, 2)+Math.pow(DestinationY-(LeftY+RightY)/2.0, 2)) ||
-        dist > BoardWidth || Math.abs(distL-distR)>=speed*2){
+        if (  Math.sqrt(Math.pow(DestinationX-TempRightX, 2)+Math.pow(DestinationY-TempRightY, 2)) >= BoardWidth/Math.sqrt(2) ||
+                Math.sqrt(Math.pow(DestinationX-TempLeftX, 2)+Math.pow(DestinationY-TempLeftY, 2)) >= BoardWidth/Math.sqrt(2)){
             LeftX = TempLeftX;
             LeftY = TempLeftY;
             RightX = TempRightX;
