@@ -2,6 +2,8 @@ package com.natifick.theexamination;
 
 import android.graphics.Canvas;
 
+import java.util.ArrayList;
+
 public class GameManager extends Thread{
     /**  Объект класса  */
     private GameView view;
@@ -11,6 +13,8 @@ public class GameManager extends Thread{
 
     /** Список всех подклассов */
     Board board;
+    ArrayList<Cell> cells;
+    Boss boss;
 
     /**  Переменная для задания состояния потока отрисовки  */
     private boolean running = false;
@@ -48,6 +52,7 @@ public class GameManager extends Thread{
 
             // Перемещаем элементы на поле
             board.Move();
+            boss.Move();
         }
     }
 }

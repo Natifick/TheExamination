@@ -4,7 +4,7 @@
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#D81B60</color>
     <color name="Badass">#BADA55</color>
-    <color name="BadassDark">#4A571B</color>
-    <color name="Light">#90DEFF66</color>
+    <color name="Light">#DEFF66</color>
     <color name="White">#FFFFFF</color>
+    <color name="LightGreen">#C3FF00</color>
 </resources>

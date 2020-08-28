@@ -1,19 +1,25 @@
 package com.natifick.theexamination;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
+
+import java.util.ArrayList;
 
 public class GameView extends SurfaceView {
 
     /**  отступ от краёв экрана  */
-    public static final int PADDING = 30;
+    public static final int PADDING_X = 30, PADDING_Y=30+200;
 
     /** ширина поля */
     public int width;
@@ -34,18 +40,26 @@ public class GameView extends SurfaceView {
 
     /** Список всех подклассов */
     Board board;
+    ArrayList<Cell> cells;
+    Boss boss;
 
     /** Доска, которую двигает игрок */
     RectF boardRect;
 
-    int cnt = 0;
+    /** иногда используется в других классах */
+    public static Resources res;
+
+    /**  используется для смещения босса в нужную координату */
+    Matrix matrix = new Matrix();
 
     /** конструктор класса */
     public GameView(Context context){
         super(context);
         // Настраиваем цвета
         BackgroudColor = getResources().getColor(R.color.Light, null);
-        BoardColor = getResources().getColor(R.color.BadassDark, null);
+        BoardColor = getResources().getColor(R.color.colorAccent, null);
+
+        res = context.getResources();
 
         // Берем "кисточку" и сам "холст"
         paint = new Paint();
@@ -84,6 +98,25 @@ public class GameView extends SurfaceView {
             }
         });
         //bmp = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher);
+
+        setOnTouchListener(new View.OnTouchListener(){
+            @Override
+            public boolean onTouch(View v, MotionEvent event){
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_MOVE:
+                    case MotionEvent.ACTION_DOWN:
+                        board.CountTarget((int)event.getX(event.getPointerCount()-1)-PADDING_X,
+                                (int)event.getY(event.getPointerCount()-1)-PADDING_Y);
+                        break;
+                    case MotionEvent.ACTION_UP:
+                    case MotionEvent.ACTION_CANCEL:
+                    case MotionEvent.ACTION_OUTSIDE:
+                        board.Moving=dir.No;
+                        break;
+                }
+                return true;
+            }
+        });
     }
 
     /** Узнаём размерность окошка для рисования */
@@ -92,7 +125,9 @@ public class GameView extends SurfaceView {
         this.width = w;
         this.height = h;
         board = new Board(width, height);
+        boss = new Boss(width, height, board);
         gameThread.board = board;
+        gameThread.boss = boss;
         boardRect = new RectF(0, 0, board.BoardWidth, board.BoardHeight);
         super.onSizeChanged(w, h, oldw, oldh);
     }
@@ -108,21 +143,40 @@ public class GameView extends SurfaceView {
         // рамка или же "рельсы"
         paint.setColor(Color.BLACK);
         paint.setStyle(Paint.Style.STROKE);
-        canvas.drawRect(PADDING, PADDING, width-PADDING, height-PADDING, paint);
+        canvas.drawRect(PADDING_X+(int)(board.BoardHeight/2.0), PADDING_Y+(int)(board.BoardHeight/2.0),
+                width-PADDING_X-(int)(board.BoardHeight/2.0), height-PADDING_Y-(int)(board.BoardHeight/2.0), paint);
 
+        canvas.drawText(boss.VecX + " " + boss.VecY, 100, 100, paint);
         // сохраняем текущее состояние поворота и положения канваса
         canvas.save();
 
         // Перемещаем краешек доски туда, куда нужно
-        paint.setColor(BoardColor);
-        paint.setStrokeWidth(5);
-        paint.setStyle(Paint.Style.FILL_AND_STROKE);
-        canvas.translate(PADDING + board.RightX, PADDING + board.RightY);
+        // и рисуем сначла сам прямоугольник, а затем его обрамление
+        canvas.translate(PADDING_X + board.RightX, PADDING_Y + board.RightY);
         canvas.rotate(board.angle);
+        paint.setColor(BoardColor);
+        paint.setStyle(Paint.Style.FILL);
+        canvas.drawRect(boardRect, paint);
+        paint.setColor(Color.BLACK);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(5);
         canvas.drawRect(boardRect, paint);
         paint.setStrokeWidth(1);
         // Возвращаемся к сохранённому состоянию
         canvas.restore();
+
+        // рисуем босса
+        matrix.setRotate(boss.angle, boss.radius, boss.radius);
+        matrix.postTranslate((int)(width/2.0)-boss.radius, (int)(height/2.0)-boss.radius);
+
+        switch (boss.CurPic){
+            case -1: canvas.drawBitmap(boss.ImgLeft, matrix, paint);
+                break;
+            case 0: canvas.drawBitmap(boss.ImgMiddle, matrix, paint);
+                break;
+            case 1: canvas.drawBitmap(boss.ImgRight, matrix, paint);
+                break;
+        }
 
     }
 }
