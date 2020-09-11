@@ -2,7 +2,7 @@ package com.natifick.theexamination;
 
 import android.graphics.Canvas;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 
 public class GameManager extends Thread{
     /**  Объект класса  */
@@ -13,7 +13,7 @@ public class GameManager extends Thread{
 
     /** Список всех подклассов */
     Board board;
-    ArrayList<Cell> cells;
+    LinkedList<Cell> cells;
     Boss boss;
 
     /**  Переменная для задания состояния потока отрисовки  */
@@ -34,8 +34,21 @@ public class GameManager extends Thread{
     /**  Действия, выполняемые в потоке  */
     public void run() {
         long ticksPS = 1000 / FPS;
+        Canvas c = null;
+        // Блокируем
+        try{
+            c = view.getHolder().lockCanvas();
+            synchronized (view.getHolder()){
+                view.intialDraw(c);
+            }
+        } finally{
+            if (c != null){
+                view.getHolder().unlockCanvasAndPost(c);
+            }
+        }
+        view.intialDraw(c);
         while (running) {
-            Canvas c = null;
+            c = null;
             try {
                 c = view.getHolder().lockCanvas();
                 synchronized (view.getHolder()) {

@@ -1,10 +1,7 @@
 package com.natifick.theexamination;
 
 
-import android.view.MotionEvent;
-
-import java.util.ArrayList;
-import java.util.ListIterator;
+import java.util.LinkedList;
 
 /** перечисление для направления движения*/
 enum dir{
@@ -45,7 +42,7 @@ public class Board {
     }
 
     /**  сталкиваемся со "снарядом"  */
-    public void collide(ArrayList<Cell> cells){
+    public void collide(LinkedList<Cell> cells){
         if (cells.size()>0) {
             double X2, Y2, X1 = (LeftX-RightX)/(double)BoardWidth, Y1 = (LeftY-RightY)/(double)BoardWidth;
             if (Y1!=0){

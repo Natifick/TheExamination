@@ -1,11 +1,9 @@
 package com.natifick.theexamination;
 
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 
 public class Boss {
     int speed, radius;
@@ -52,7 +50,7 @@ public class Boss {
         return null;
     }
 
-    public void collide(ArrayList<Cell> cells){
+    public void collide(LinkedList<Cell> cells){
         if (cells.size()>0){
             for (Cell c: cells){
                 if (Math.pow(c.CellX-FieldWidth/2.0, 2) + Math.pow(c.CellY-FieldHeight/2.0, 2) <= (radius+c.CellR)*(radius+c.CellR)) {

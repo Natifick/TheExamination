@@ -2,8 +2,6 @@ package com.natifick.theexamination;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
@@ -14,7 +12,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 
 public class GameView extends SurfaceView {
 
@@ -40,7 +38,7 @@ public class GameView extends SurfaceView {
 
     /** Список всех подклассов */
     Board board;
-    ArrayList<Cell> cells;
+    LinkedList<Cell> cells;
     Boss boss;
 
     /** Доска, которую двигает игрок */
@@ -58,7 +56,7 @@ public class GameView extends SurfaceView {
         // Настраиваем цвета
         BackgroudColor = getResources().getColor(R.color.Light, null);
         BoardColor = getResources().getColor(R.color.colorAccent, null);
-        cells = new ArrayList<>();
+        cells = new LinkedList<>();
 
         res = context.getResources();
 
@@ -137,18 +135,19 @@ public class GameView extends SurfaceView {
         super.onSizeChanged(w, h, oldw, oldh);
     }
 
+    /**   Изначальная прорисовка (рисовать иконки героев каждую секунду слишком дорого)   */
     public void intialDraw(Canvas canvas) {
         paint.setColor(BackgroudColor);
         canvas.drawPaint(paint);
     }
 
-    /** Рисуем кружок на голубом фоне */
+    /** Отрисовываем все элементы на поле */
     @Override
     public void draw(Canvas canvas){
         super.draw(canvas);
         // фон
         paint.setColor(BackgroudColor);
-        canvas.drawPaint(paint);
+        canvas.drawRect(0, PADDING_Y, width, height-PADDING_Y, paint);
 
         // рамка или же "рельсы"
         paint.setColor(Color.BLACK);
