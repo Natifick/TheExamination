@@ -3,6 +3,9 @@ package com.natifick.theexamination;
 
 import android.view.MotionEvent;
 
+import java.util.ArrayList;
+import java.util.ListIterator;
+
 /** перечисление для направления движения*/
 enum dir{
     Left, No, Right;
@@ -16,7 +19,7 @@ public class Board {
 
     /** не перечисление, чтобы можно было вычислять */
     dir Moving;
-    public final int speed = 18;
+    public final int speed = 20;
     float angle, AttackAngle;
     /**  информация об основном поле  */
     public int FieldWidth, FieldHeight;
@@ -36,16 +39,113 @@ public class Board {
 
         Health = 100;
         angle = 0;
-
         Moving = dir.No;
         DestinationX = (int)(FieldWidth/2.0);
         DestinationY = 0;
     }
+
+    /**  сталкиваемся со "снарядом"  */
+    public void collide(ArrayList<Cell> cells){
+        if (cells.size()>0) {
+            double X2, Y2, X1 = (LeftX-RightX)/(double)BoardWidth, Y1 = (LeftY-RightY)/(double)BoardWidth;
+            if (Y1!=0){
+                X2 = (LeftX <= FieldWidth/2.0?1:-1)*Math.abs(Y1);
+                Y2 = -X2*X1/Y1;
+            }
+            else{
+                Y2 = (LeftY <= FieldHeight/2.0?1:-1)*Math.abs(X1);
+                X2 = -Y2*Y1/X1;
+            }
+            //       ________________________
+            //       |         |Top          |           /|\
+            //Right  |                       | - Left     |    ____\
+            //       |         Bottom        |           X2    X1  /
+            //       |_________|_____________|
+            // Формула расстояния до прямой: Ax+By+C или x*Y1 - y*X1 + (Y0*X1 - X0*Y1)
+
+            double bottom, top, left, right;
+
+            double distL = LeftY*X2-LeftX*Y2;
+            double distM = (LeftY+Y2*BoardHeight)*X1-(LeftX+X2*BoardHeight)*Y1;
+            double distR = RightY*X2-RightX*Y2;
+
+            double PrLen; // Длина проекции
+            // Для определения расстояния между точками используем функцию
+            for (Cell c: cells){
+                // для ускорения вычислений с большим количеством снарядов проверяем с какого расстояния вообще нужно вычислять
+                if (!(Math.pow(LeftX-c.CellX, 2) + Math.pow(LeftY-c.CellY, 2)<=
+                        Math.pow(X1*(BoardWidth+c.CellR)+X2*(BoardHeight+c.CellR), 2) + Math.pow(Y1*(BoardWidth+c.CellR)+Y2*(BoardHeight+c.CellR), 2))){
+                    continue;
+                }
+
+                bottom = c.CellX*Y1-c.CellY*X1 + (LeftY-Y2*c.CellR)*X1 - (LeftX-X2*c.CellR)*Y1;
+                top = c.CellX*Y1-c.CellY*X1 + (LeftY+Y2*(BoardHeight+c.CellR))*X1 - (LeftX+X2*(BoardHeight+c.CellR))*Y1;
+                // На самом деле bottom мы использовать не будем, лишь для проверки попадения внутрь прямоугольника
+                left = c.CellX*Y2-c.CellY*X2 + (LeftY+Y1*c.CellR)*X2 - (LeftX-X1*c.CellR)*Y2;
+                right = c.CellX*Y2-c.CellY*X2 + (RightY-Y1*c.CellR)*X2 - (RightX-X1*c.CellR)*Y2;
+
+                if(Math.signum(bottom) != Math.signum(top) && Math.signum(left) != Math.signum(right)){
+                    switch(c.CellType){
+                        case Cell2:
+                            Health -= 5;
+                            c.dead =true;
+                            break;
+                        case Failed:
+                        case Resit:
+                            Health -= 6;
+                            c.dead = true;
+                            break;
+                        case Mew:
+                            Health -= 3;
+                            c.dead = true;
+                            break;
+                        default:
+                            if (c.invinc==0){
+                                if (Math.abs(top)<=Math.abs(left) && Math.abs(top)<=Math.abs(right)){
+                                    PrLen = c.speedX*X2 + c.speedY*Y2;
+                                    c.speedX -= 2*PrLen*X2;
+                                    c.speedY -= 2*PrLen*Y2;
+                                }
+                                else if (Math.abs(right)<=Math.abs(left) && Math.abs(right) <=Math.abs(top)){
+                                    PrLen = c.speedX*X1 + c.speedY*Y1;
+                                    c.speedX += 2*PrLen*X1;
+                                    c.speedY += 2*PrLen*Y1;
+                                }
+                                else if (Math.abs(left)<=Math.abs(right) && Math.abs(left) <= Math.abs(top)){
+                                    PrLen = c.speedX*X1 + c.speedY*Y1;
+                                    c.speedX -= 2*PrLen*X1;
+                                    c.speedY -= 2*PrLen*Y1;
+                                }
+                                else{ // Такая ситуация, конечно, не возникнет
+                                    PrLen = c.speedX*X2 + c.speedY*Y2;
+                                    c.speedX += 2*PrLen*X2;
+                                    c.speedY += 2*PrLen*Y2;
+                                }
+                                c.invinc = 4; // примерное число тактов, которые можем пропустить
+                            }
+                            else{
+                                c.invinc--;
+                            }
+                    }
+                }
+            }
+        }
+    }
+
+
     /** По координате касания вычисляем, куда должна двигаться доска */
     public void CountTarget(int X, int Y){
 
-        // Находим к какой из точек на рельсах мы ближе всего
+        // Если мы ниже или выше границ, то смещаем в пределы границ
         int minX = X, minY = Y;
+
+        if (X>FieldWidth) X = FieldWidth;
+        else if (X <0) X = 0;
+        if (Y>FieldHeight) Y = FieldHeight;
+        else if (Y<0) Y=0;
+
+
+        // Находим к какой из точек на рельсах мы ближе всего
         if (X > FieldWidth-X){
             minX = FieldWidth-X;
         }
@@ -153,12 +253,8 @@ public class Board {
         else{
             Moving=dir.Right;
         }
-
     }
 
-    public void collide(Cell cell){
-
-    }
 
     /** Считаем куда передвинется доска за 1 такт и если мы достигли "цели", то останавливаемся  */
     public void Move(){ // При движении точка не знает об отступах от границ

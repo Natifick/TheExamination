@@ -19,7 +19,7 @@ import java.util.ArrayList;
 public class GameView extends SurfaceView {
 
     /**  отступ от краёв экрана  */
-    public static final int PADDING_X = 30, PADDING_Y=30+200;
+    public static int PADDING_X = 30, PADDING_Y = 200+30;
 
     /** ширина поля */
     public int width;
@@ -58,6 +58,7 @@ public class GameView extends SurfaceView {
         // Настраиваем цвета
         BackgroudColor = getResources().getColor(R.color.Light, null);
         BoardColor = getResources().getColor(R.color.colorAccent, null);
+        cells = new ArrayList<>();
 
         res = context.getResources();
 
@@ -95,6 +96,7 @@ public class GameView extends SurfaceView {
             /** Изменение области рисования */
             public void surfaceChanged(SurfaceHolder holder, int format, int width, int height)
             {
+                
             }
         });
         //bmp = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher);
@@ -124,12 +126,20 @@ public class GameView extends SurfaceView {
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         this.width = w;
         this.height = h;
+        PADDING_Y = (int)((h-w)/2.0)+PADDING_X;
+
         board = new Board(width, height);
         boss = new Boss(width, height, board);
         gameThread.board = board;
         gameThread.boss = boss;
+        gameThread.cells = cells;
         boardRect = new RectF(0, 0, board.BoardWidth, board.BoardHeight);
         super.onSizeChanged(w, h, oldw, oldh);
+    }
+
+    public void intialDraw(Canvas canvas) {
+        paint.setColor(BackgroudColor);
+        canvas.drawPaint(paint);
     }
 
     /** Рисуем кружок на голубом фоне */
@@ -146,7 +156,6 @@ public class GameView extends SurfaceView {
         canvas.drawRect(PADDING_X+(int)(board.BoardHeight/2.0), PADDING_Y+(int)(board.BoardHeight/2.0),
                 width-PADDING_X-(int)(board.BoardHeight/2.0), height-PADDING_Y-(int)(board.BoardHeight/2.0), paint);
 
-        canvas.drawText(boss.VecX + " " + boss.VecY, 100, 100, paint);
         // сохраняем текущее состояние поворота и положения канваса
         canvas.save();
 
@@ -168,7 +177,6 @@ public class GameView extends SurfaceView {
         // рисуем босса
         matrix.setRotate(boss.angle, boss.radius, boss.radius);
         matrix.postTranslate((int)(width/2.0)-boss.radius, (int)(height/2.0)-boss.radius);
-
         switch (boss.CurPic){
             case -1: canvas.drawBitmap(boss.ImgLeft, matrix, paint);
                 break;
@@ -177,6 +185,29 @@ public class GameView extends SurfaceView {
             case 1: canvas.drawBitmap(boss.ImgRight, matrix, paint);
                 break;
         }
+
+        // Выводим все "снаряды"
+        for (Cell cell: cells){
+            paint.setColor(Type.getColor(cell.CellType));
+            switch(cell.CellType){
+                case Cell2:
+                case Cell3:
+                case Cell4:
+                case Cell5:
+                    paint.setStyle(Paint.Style.FILL);
+                    canvas.drawCircle(cell.CellX+PADDING_X, cell.CellY+PADDING_Y, cell.CellR, paint);
+                    paint.setColor(Color.BLACK);
+                    paint.setTextSize(cell.CellR*2);
+                    canvas.drawText(Type.getName(cell.CellType), cell.CellX+PADDING_X-(int)(cell.CellR/2.0), cell.CellY+PADDING_Y+(int)(cell.CellR/2.0), paint);
+                    break;
+                case Failed:
+                case Mew:
+                case Resit:
+                    break;
+            }
+
+        }
+
 
     }
 }

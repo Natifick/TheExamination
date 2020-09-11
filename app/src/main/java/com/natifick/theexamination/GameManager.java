@@ -53,6 +53,22 @@ public class GameManager extends Thread{
             // Перемещаем элементы на поле
             board.Move();
             boss.Move();
+
+            if (cells != null){
+                board.collide(cells);
+                boss.collide(cells);
+                for (int i=0;i<cells.size();i++){
+                    cells.get(i).Move(); // Двигаем каждую клетку и проверяем, за пределами ли она поля
+                    if (cells.get(i).dead){
+                        cells.remove(i);
+                        i--;
+                    }
+                }
+            }
+            Cell newc = boss.Attack();
+            if (newc != null){
+                cells.add(newc);
+            }
         }
     }
 }
