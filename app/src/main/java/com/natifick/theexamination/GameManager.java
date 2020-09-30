@@ -1,20 +1,26 @@
 package com.natifick.theexamination;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 
 import java.util.LinkedList;
+
 
 public class GameManager extends Thread{
     /**  Объект класса  */
     private GameView view;
 
-    /**  частота смены кадров  */
-    int FPS = 60;
+    /**  частота смены кадров, меньше - лучше  */
+    int FPS = 40;
 
     /** Список всех подклассов */
     Board board;
     LinkedList<Cell> cells;
     Boss boss;
+
+    /** Картинка нашего героя будет всегда разной */
+    Bitmap ImgPerson;
 
     /**  Переменная для задания состояния потока отрисовки  */
     private boolean running = false;
@@ -25,6 +31,21 @@ public class GameManager extends Thread{
         this.view = view;
     }
 
+    void consider(){
+        switch((int)(Math.random()*4.0)){
+            case 0:
+                ImgPerson = BitmapFactory.decodeResource(GameView.res, R.drawable.ilya);
+                break;
+            case 1:
+                ImgPerson = BitmapFactory.decodeResource(GameView.res, R.drawable.max);
+                break;
+            case 3:
+                ImgPerson = BitmapFactory.decodeResource(GameView.res, R.drawable.olya);
+                break;
+        }
+        ImgPerson = Bitmap.createScaledBitmap(ImgPerson, (int)(GameView.PADDING_Y /2.0), (int)(GameView.PADDING_Y /2.0), true);
+    }
+
     /**  Задание состояния потока  */
     public void setRunning(boolean run)
     {
@@ -33,20 +54,9 @@ public class GameManager extends Thread{
 
     /**  Действия, выполняемые в потоке  */
     public void run() {
-        long ticksPS = 1000 / FPS;
+        long ticksPS = 500 / FPS;
         Canvas c = null;
-        // Блокируем
-        try{
-            c = view.getHolder().lockCanvas();
-            synchronized (view.getHolder()){
-                view.intialDraw(c);
-            }
-        } finally{
-            if (c != null){
-                view.getHolder().unlockCanvasAndPost(c);
-            }
-        }
-        view.intialDraw(c);
+
         while (running) {
             c = null;
             try {
@@ -62,6 +72,10 @@ public class GameManager extends Thread{
             try {
                 sleep(ticksPS);
             } catch (Exception e) {}
+
+            if (boss.Health == 0 || board.Health == 0){
+                break;
+            }
 
             // Перемещаем элементы на поле
             board.Move();
@@ -82,6 +96,24 @@ public class GameManager extends Thread{
             if (newc != null){
                 cells.add(newc);
             }
+
+            // Чтобы здоровье не продолжало отрисовываться в минус делаем ReLU
+            if (board.Health < 0) board.Health = 0;
+            if (boss.Health < 0) boss.Health = 0;
         }
+        c = null;
+        try {
+            c = view.getHolder().lockCanvas();
+            synchronized (view.getHolder()) {
+                view.findraw(c);
+            }
+        } finally {
+            if (c != null) {
+                view.getHolder().unlockCanvasAndPost(c);
+            }
+        }
+        try {
+            sleep(ticksPS);
+        } catch (Exception e) {}
     }
 }

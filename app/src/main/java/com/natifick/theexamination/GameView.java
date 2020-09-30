@@ -2,6 +2,7 @@ package com.natifick.theexamination;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
@@ -131,23 +132,71 @@ public class GameView extends SurfaceView {
         gameThread.board = board;
         gameThread.boss = boss;
         gameThread.cells = cells;
+        gameThread.consider();
         boardRect = new RectF(0, 0, board.BoardWidth, board.BoardHeight);
         super.onSizeChanged(w, h, oldw, oldh);
     }
 
-    /**   Изначальная прорисовка (рисовать иконки героев каждую секунду слишком дорого)   */
-    public void intialDraw(Canvas canvas) {
+    /** Вывод проиграл ты или выиграл в конце игры */
+    public void findraw(Canvas canvas){
+        super.draw(canvas);
+        // фон + иконки персонажей
         paint.setColor(BackgroudColor);
+        paint.setStyle(Paint.Style.FILL);
         canvas.drawPaint(paint);
+        paint.setTextSize((float)(PADDING_X*2));
+        if (board.Health ==0){
+            paint.setColor(Color.RED);
+            canvas.drawText("До свидания", PADDING_X, (float)(PADDING_X*2), paint);
+            canvas.drawText("Пересдача в феврале", PADDING_X, (float)(PADDING_X*4), paint);
+        }
+        else{
+            paint.setColor(Color.MAGENTA);
+            canvas.drawText("Ладно, ты хорош", PADDING_X, (float)(PADDING_X*2), paint);
+            canvas.drawText("Увидимся в следующем семестре...", PADDING_X, (float)(PADDING_X*4), paint);
+        }
     }
 
     /** Отрисовываем все элементы на поле */
     @Override
     public void draw(Canvas canvas){
         super.draw(canvas);
-        // фон
+        // фон + иконки персонажей
         paint.setColor(BackgroudColor);
-        canvas.drawRect(0, PADDING_Y, width, height-PADDING_Y, paint);
+        canvas.drawPaint(paint);
+        // Иконка босса
+        matrix.setTranslate(PADDING_X, (float)(PADDING_Y/4.0));
+        canvas.drawBitmap(boss.SmallMiddle, matrix, paint);
+        // Иконка персонажа
+        matrix.setTranslate(PADDING_X, height - (float)(PADDING_Y*3/4.0));
+        canvas.drawBitmap(gameThread.ImgPerson, matrix, paint);
+
+        // здоровье босса: основная часть
+        paint.setColor(Color.GREEN);
+        paint.setStyle(Paint.Style.FILL);
+        canvas.drawRect(PADDING_X + (float)(PADDING_Y/2.0), (float)(PADDING_Y*3/8.0),
+                (float)(PADDING_Y/2.0 + PADDING_X + (width - 2*PADDING_X-PADDING_Y/2.0)*boss.Health*7/800.0), (float)(PADDING_Y*5/8.0), paint);
+        // здоровье босса: окаймляющая его часть
+        paint.setColor(Color.BLACK);
+        paint.setStyle(Paint.Style.STROKE);
+        canvas.drawRect(PADDING_X + (float)(PADDING_Y/2.0), (float)(PADDING_Y*3/8.0),
+                (float) (PADDING_Y/2.0 + PADDING_X + (width - 2*PADDING_X-PADDING_Y/2.0)*7/8.0), (float)(PADDING_Y*5/8.0), paint);
+        paint.setTextSize((float)(PADDING_Y/16.0));
+        canvas.drawText("" + boss.Health, (float)(width*7/8.0) - PADDING_X, (float)(PADDING_Y*3/8.0), paint);
+
+        // здоровье персонажа: основная часть
+        paint.setColor(Color.GREEN);
+        paint.setStyle(Paint.Style.FILL);
+        canvas.drawRect(PADDING_X + (float)(PADDING_Y/2.0), height - (float)(PADDING_Y*3/8.0),
+                (float)(PADDING_Y/2.0 + PADDING_X + (width - 2*PADDING_X-PADDING_Y/2.0)*board.Health*7/800.0), height - (float)(PADDING_Y*5/8.0), paint);
+        // здоровье персонажа: окаймляющая его часть
+        paint.setColor(Color.BLACK);
+        paint.setStyle(Paint.Style.STROKE);
+        canvas.drawRect(PADDING_X + (float)(PADDING_Y/2.0), height - (float)(PADDING_Y*3/8.0),
+                (float) (PADDING_Y/2.0 + PADDING_X + (width - 2*PADDING_X-PADDING_Y/2.0)*7/8.0), height - (float)(PADDING_Y*5/8.0), paint);
+        paint.setTextSize((float)(PADDING_Y/16.0));
+        canvas.drawText("" + board.Health, (float)(width*7/8.0) - PADDING_X, height - (float)(PADDING_Y*3/8.0), paint);
+
 
         // рамка или же "рельсы"
         paint.setColor(Color.BLACK);

@@ -2,4 +2,5 @@
     <string name="app_name">The Examination</string>
     <string name="Gamer">Вы</string>
     <string name="Boss">Карпов</string>
+    <string name="start">Начать игру</string>
 </resources>

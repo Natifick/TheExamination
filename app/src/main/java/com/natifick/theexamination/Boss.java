@@ -9,6 +9,7 @@ public class Boss {
     int speed, radius;
     float angle;
     Bitmap ImgLeft, ImgMiddle, ImgRight; // изображения для босса
+    Bitmap SmallLeft, SmallMiddle, SmallRight;
     dir Moving;
     short CurPic;
     Board board;
@@ -32,6 +33,7 @@ public class Boss {
         this.ImgLeft = BitmapFactory.decodeResource(GameView.res, R.drawable.karpov_left);
         this.ImgMiddle = BitmapFactory.decodeResource(GameView.res, R.drawable.karpov_middle);
         this.ImgRight = BitmapFactory.decodeResource(GameView.res, R.drawable.karpov_right);
+        SmallMiddle = Bitmap.createScaledBitmap(ImgMiddle, (int)(GameView.PADDING_Y/2.0), (int)(GameView.PADDING_Y/2.0), true);
         CurPic = 0;
         radius = (int)(ImgLeft.getHeight()/2.0);
     }
@@ -40,7 +42,7 @@ public class Boss {
         if (Attack){
             Relief = (short)((Relief+1)%AttackRate);
             if (Relief==0){ // уменьшаем вероятность атаки
-                return new Cell(Type.values()[(int)(Math.random()*(Type.length()+1))], (float)VecX*13, (float)VecY*13, FieldWidth, FieldHeight, radius);
+                return new Cell(Type.values()[(int)(Math.random()*(Type.length()))], (float)VecX*13, (float)VecY*13, FieldWidth, FieldHeight, radius);
             }
         }
         else{

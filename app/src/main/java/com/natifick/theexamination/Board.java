@@ -87,6 +87,10 @@ public class Board {
                             Health -= 5;
                             c.dead =true;
                             break;
+                        case Cell3:
+                            Health -= 4;
+                            c.dead = true;
+                            break;
                         case Failed:
                         case Resit:
                             Health -= 6;
@@ -134,12 +138,13 @@ public class Board {
     public void CountTarget(int X, int Y){
 
         // Если мы ниже или выше границ, то смещаем в пределы границ
-        int minX = X, minY = Y;
 
-        if (X>FieldWidth) X = FieldWidth;
+        if (X>FieldWidth) X = FieldWidth-1;
         else if (X <0) X = 0;
-        if (Y>FieldHeight) Y = FieldHeight;
+        if (Y>FieldHeight) Y = FieldHeight-1;
         else if (Y<0) Y=0;
+
+        int minX = X, minY = Y;
 
 
         // Находим к какой из точек на рельсах мы ближе всего
